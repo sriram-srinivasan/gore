@@ -1,6 +1,6 @@
 package main
 
-import "eval"
+import "gore/eval"
 import "fmt"
 import "bufio"
 import "os"
