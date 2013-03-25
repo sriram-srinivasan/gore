@@ -1,6 +1,6 @@
 package main
 
-import "gore/eval"
+import "github.com/sriram-srinivasan/gore/eval"
 import "fmt"
 import "bufio"
 import "os"

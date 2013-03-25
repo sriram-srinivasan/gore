@@ -68,8 +68,7 @@ $ gore '
 # Install
 
 ```
-go get 'github.com/sriram-srinivasan/gore/...'
-go install -v 'github.com/sriram-srinivasan/gore/...'
+go get github.com/sriram-srinivasan/gore
 ```
 
 # The `gore/eval` package
