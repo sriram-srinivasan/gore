@@ -1,6 +1,6 @@
 #gore
 
-`gore` is a command-line evaluator of golang code -- a REPL without a loop, if you will -- meant for interactively trying out snippets of go code. It is a replacement for the [go playground](http://play.golang.org), while making it much easier to try bits of code: `gore` automatically supplies boiler-plate code such as `import` and `package` declarations and a `main` function wrapper. Also, since it runs on your own computer, no code is rejected on security grounds (unlike go playground's safe sandbox mode).
+`gore` is a command-line evaluator for golang code -- a REPL without a loop, if you will. It is a replacement for the [go playground](http://play.golang.org), while making it much easier to interactively try out bits of code: `gore` automatically supplies boiler-plate code such as `import` and `package` declarations and a `main` function wrapper. Also, since it runs on your own computer, no code is rejected on security grounds (unlike go playground's safe sandbox mode).
 
 #Usage
 
@@ -68,7 +68,8 @@ $ gore '
 # Install
 
 ```
-
+go get 'github.com/sriram-srinivasan/gore/...'
+go install -v 'github.com/sriram-srinivasan/gore/...'
 ```
 
 # The `gore/eval` package
