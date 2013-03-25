@@ -195,7 +195,7 @@ func Eval(code string) (out string, err string) {
 func expandAliases(code string) string {
 	// Expand "p foo(), 2*3"   to println(foo(), 2*3)
 	r := regexp.MustCompile(`(?m)^\s*p +(.*)$`)
-	return string(r.ReplaceAll([]byte(code), []byte(" println($1)")))
+	return string(r.ReplaceAll([]byte(code), []byte("println($1)")))
 }
 
 // Each line of the original source is tagged with a line number at the end like so: //#100
@@ -266,11 +266,20 @@ func repairImports(err string, pkgsToImport map[string]bool) (dupsDetected bool)
 	// "test.go:10: xxx redeclared as imported package name"
 	// and remove 'xxx' from pkgsToImport
 	dupsDetected = false
-	r := regexp.MustCompile(`(\w+) redeclared as imported package name`)
+	var pkg string
+	r := regexp.MustCompile(`(?m)(\w+) redeclared as imported package name|imported and not used: "(\w+)"`)
 	for _, match := range r.FindAllStringSubmatch(err, -1) {
-		pkg := match[1]
-		delete(pkgsToImport, pkg)
-		dupsDetected = true
+		// Either $1 or $2 will have name of pkg name that's been imported
+		if (match[1] != "") {
+			pkg = match[1]
+		} else if (match[2] != "") {
+			pkg = match[2]
+		}
+		if (pkgsToImport[pkg]) {
+			// Was the duplicate import our mistake, due to an incorrect guess? If so ... 
+			delete(pkgsToImport, pkg)
+			dupsDetected = true
+		}
 	}
 	return dupsDetected
 }
@@ -303,9 +312,6 @@ func remapCompileErrorLines(err string, newToOldLineNums map[int]int) string {
 				panic("Internal error: Unable to convert " + line[m[2]:m[3]])
 			}
 			oldLine := newToOldLineNums[newLine]
-			if oldLine == 0 {
-				panic(fmt.Sprintf("Internal error: map to %d not found", newLine))
-			}
 			ret += fmt.Sprintf("%d:%s", oldLine, line[(m[3]+1):])
 		} else {
 			ret += line
