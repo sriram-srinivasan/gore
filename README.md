@@ -22,27 +22,28 @@ $ gore 'p 200*300, "foo"
 p pretty prints each argument by formatting it with fmt.Printf("%v")
 
 #### Command-line arg can be over multiple lines
-gore '
+gore \'
 p "Making a point"
 type Point struct {
     x,y int
 }
 v := Point{10, 100}
 p v
-' 
+\' 
 ---------------------------------
 Making a point
 {10 100}
 ```
 #### Import statements are inferred 
 ```
-gore '
+gore \'
 r := regexp.MustCompile(`(\w+) says (\w+)`)
 match := r.FindStringSubmatch("World says Hello")
 p "0:" + match[0], "1:"+ match[1], "2:" + match[2]
-'
+\'
 ---------------------------------
 0:World says Hello
 1:World
 2:Hello
 ```
+#### 
