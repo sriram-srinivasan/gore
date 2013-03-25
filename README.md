@@ -6,44 +6,45 @@ gore is a command-line evaluator of golang code, a REPL without a loop. It is me
 #Usage
 
 
-(note: $ is the shell prompt, and all lines after "-----------" is the output of the snippet
+(note: In the examples below, $ is the shell prompt, and the output of the snippet are after "----------------"
 #### Code snippet in command line: gore evaluates its first argument
 ```
-$ gore 'println(200*300, "foo")'
+$ gore 'println(200*300, Math.Log10(1000))'
 ---------------------------------
-60000 foo
+60000 +3.000000e+000
 ```
 
 #### p alias for convenient printing
 The example above can be written as 
 ```
-$ gore 'p 200*300, "foo" 
+$ gore 'p 200*300, math.Log10(100)'
 ```
 p pretty prints each argument by formatting it with fmt.Printf("%v")
 
 #### Command-line arg can be over multiple lines
-gore \'
-p "Making a point"
-type Point struct {
+```
+gore '
+ p "Making a point"
+ type Point struct {
     x,y int
-}
-v := Point{10, 100}
-p v
-\' 
+ }
+ v := Point{10, 100}
+ p v
+' 
 ---------------------------------
 Making a point
 {10 100}
 ```
 #### Import statements are inferred 
 ```
-gore \'
-r := regexp.MustCompile(`(\w+) says (\w+)`)
+gore '
+r := regexp.MustCompile(``(\w+) says (\w+)``)
 match := r.FindStringSubmatch("World says Hello")
 p "0:" + match[0], "1:"+ match[1], "2:" + match[2]
-\'
+'
 ---------------------------------
 0:World says Hello
 1:World
 2:Hello
 ```
-#### 
+
