@@ -204,8 +204,8 @@ func expandAliases(code string) string {
 // to the original source
 func embedLineNumbers(code string) string {
 	lineNum := 0
-	if (code[len(code)-1] != '\n') {
-		code += "\n" 
+	if code[len(code)-1] != '\n' {
+		code += "\n"
 	}
 	r := regexp.MustCompile("\n")
 	return r.ReplaceAllStringFunc(code,
@@ -270,12 +270,12 @@ func repairImports(err string, pkgsToImport map[string]bool) (dupsDetected bool)
 	r := regexp.MustCompile(`(?m)(\w+) redeclared as imported package name|imported and not used: "(\w+)"`)
 	for _, match := range r.FindAllStringSubmatch(err, -1) {
 		// Either $1 or $2 will have name of pkg name that's been imported
-		if (match[1] != "") {
+		if match[1] != "" {
 			pkg = match[1]
-		} else if (match[2] != "") {
+		} else if match[2] != "" {
 			pkg = match[2]
 		}
-		if (pkgsToImport[pkg]) {
+		if pkgsToImport[pkg] {
 			// Was the duplicate import our mistake, due to an incorrect guess? If so ... 
 			delete(pkgsToImport, pkg)
 			dupsDetected = true
