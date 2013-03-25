@@ -19,18 +19,18 @@ The example above can be written as
 ```
 $ gore 'p 200*300, math.Log10(100)'
 ```
-p pretty prints each argument by formatting it with fmt.Printf("%v")
+p pretty-prints each argument by formatting it with fmt.Printf("%v")
 
 #### Command-line arg can be over multiple lines
 ```
-gore '
+gore ''
  p "Making a point"
  type Point struct {
     x,y int
  }
  v := Point{10, 100}
  p v
-' 
+'' 
 ---------------------------------
 Making a point
 {10 100}
