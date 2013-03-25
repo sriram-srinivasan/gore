@@ -1,6 +1,6 @@
-#`gore`
+#gore
 
-`gore` is a command-line evaluator of golang code -- a REPL without a loop, if you will -- meant for interactively trying out snippets of go code. It is an replacement for the [go playground](http://play.golang.org) with some important differences. `gore` makes it easier to try bits of code quickly, by automatically supplying boiler-plate code such as `import` and `package` declarations and a `main` function wrapper. Also, since it runs on your own computer, no code is rejected on security grounds (unlike go playground's safe sandbox mode).
+`gore` is a command-line evaluator of golang code -- a REPL without a loop, if you will -- meant for interactively trying out snippets of go code. It is a replacement for the [go playground](http://play.golang.org), while making it much easier to try bits of code: `gore` automatically supplies boiler-plate code such as `import` and `package` declarations and a `main` function wrapper. Also, since it runs on your own computer, no code is rejected on security grounds (unlike go playground's safe sandbox mode).
 
 #Usage
 
@@ -22,8 +22,10 @@ Enter one or more lines and hit ctrl-D
 func test() string {return "hello"}
 println(test())
 ^D
+---------------------------------
+hello
 ```
-#### p alias for convenient printing
+#### Alias for convenient printing
 The example above can be written more compactly:
 ```
 $ gore 'p 200*300, math.Log10(100)'
@@ -31,7 +33,7 @@ $ gore 'p 200*300, math.Log10(100)'
 60000
 2
 ```
-p pretty-prints each argument by formatting it with `fmt.Printf("%v\n")`
+`p` pretty-prints each argument by formatting it with `fmt.Printf("%v\n")`
 
 #### Command-line arg can be over multiple lines
 ```
@@ -65,7 +67,9 @@ $ gore '
 
 # Install
 
+```
 
+```
 
 # The `gore/eval` package
 
