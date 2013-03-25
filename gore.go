@@ -1,10 +1,12 @@
 package main
 
-import "gore/eval"
-import "fmt"
-import "bufio"
-import "os"
-import "io"
+import (
+	"bufio"
+	"fmt"
+	"github.com/sriram-srinivasan/gore/eval"
+	"io"
+	"os"
+)
 
 func main() {
 	var src string
