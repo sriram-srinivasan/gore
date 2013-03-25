@@ -56,6 +56,6 @@ $ gore '
 
 `gore` is a thin command-line wrapper over the `gore/eval` package. Use this for your own REPL.
 
-# How it works
+### How it works
 
-The `eval.Eval` function expands aliases (currently only the `p` command), and scans the snippet for possible package references. All references present in the Go standard library get a corresponding `import` statement. The source is reorganized into global and non-global code, where the former consists of type, import and function declarations. The rest is bundled into a `func main() {}` wrapper. This reorganized code is compiled using `go run` and the output (stdout and stderr) collected. If there are compiler errors pointing to incorrectly inferred packages, the corresponding import statements are removed and the code is run once again.
+The `eval.Eval` function expands aliases (currently only the `p` command), and scans the snippet for references to packages from the standard Go library. All such references a corresponding `import` statement. The source is then partitioned into global and non-global code, where global refers to `type`, `import` and `func` declarations. The rest is bundled into a `func main() {}` wrapper. This reorganized code is compiled using `go run` and the output (stdout and stderr) collected. If there are compiler errors pointing to incorrectly inferred packages, the corresponding import statements are removed and the code is run once again.
