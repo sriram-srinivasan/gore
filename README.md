@@ -16,7 +16,8 @@ $ gore 'println(200*300, "foo")'
 
 #### p alias for convenient printing
 The example above can be written as 
-```$ gore 'p 200*300, "foo" 
+```
+$ gore 'p 200*300, "foo" 
 ```
 p pretty prints each argument by formatting it with fmt.Printf("%v")
 
@@ -33,4 +34,15 @@ p v
 Making a point
 {10 100}
 ```
-
+#### Import statements are inferred 
+```
+gore '
+r := regexp.MustCompile(`(\w+) says (\w+)`)
+match := r.FindStringSubmatch("World says Hello")
+p "0:" + match[0], "1:"+ match[1], "2:" + match[2]
+'
+---------------------------------
+0:World says Hello
+1:World
+2:Hello
+```
