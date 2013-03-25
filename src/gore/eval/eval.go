@@ -303,7 +303,7 @@ func remapCompileErrorLines(err string, newToOldLineNums map[int]int) string {
 	ret := ""
 	r := regexp.MustCompile(`^.*?:(\d+):`)
 	for _, line := range strings.Split(err, "\n") {
-		if len(line) == 0 || line[0] == '#' {
+		if len(line) == 0 || strings.HasPrefix(line, "# command-line-arguments") {
 			continue
 		}
 		if m := r.FindStringSubmatchIndex(line); m != nil {
@@ -312,9 +312,9 @@ func remapCompileErrorLines(err string, newToOldLineNums map[int]int) string {
 				panic("Internal error: Unable to convert " + line[m[2]:m[3]])
 			}
 			oldLine := newToOldLineNums[newLine]
-			ret += fmt.Sprintf("%d:%s", oldLine, line[(m[3]+1):])
+			ret += fmt.Sprintf("%d:%s\n", oldLine, line[(m[3]+1):])
 		} else {
-			ret += line
+			ret += line + "\n"
 		}
 	}
 	return ret
@@ -368,27 +368,38 @@ func main() {
 	return fmt.Sprintf(template, imports, valuefmt, global, nonGlobal)
 }
 
+var openParenPattern = regexp.MustCompile(`(\{|\() *//#\d+$`)
+
 // if line ends with '{' or '(', then consume until the corresponding '}' or ')'. Else return the next line.
 func nextChunk(code string) (chunk string) {
 	// get earliest of '{', '(' or '\n'
 	var ch, closech rune
 	var i int
-	for i, ch = range code {
-		if ch == '{' || ch == '(' || ch == '\n' {
-			break
-		}
-	}
-	pos := i + 1 // next scan always starts at pos
-	if ch == '\n' {
+
+	i = strings.Index(code, "\n")
+	pos := i + 1
+	if i == 0 {
 		return code[:pos]
-	} else if ch == '{' {
-		closech = '}'
-	} else if ch == '(' {
-		closech = ')'
-	} else {
-		return code[:]
+	} // first char is newline
+	if i == -1 {
+		return code
+	} // EOS
+
+	// Does it end with '{' or '('?  Note, line numbers have been embedded, so we look for the form '{ //#234\n'
+	parenloc := openParenPattern.FindStringIndex(code[:i])
+	if parenloc == nil {
+		return code[:pos]
 	}
-	// Search for closing ch
+	switch ch = rune(code[parenloc[0]]); ch {
+	case '{':
+		closech = '}'
+	case '(':
+		closech = ')'
+	default:
+		return code[:i]
+	}
+
+	// Search for closing ch, allowing for nesting. Note: '{' and '(' embedded within strings are incorrectly counted
 	startch := ch
 	count := 1
 	for i, ch = range code[pos:] {
