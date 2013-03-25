@@ -195,7 +195,7 @@ func Eval(code string) (out string, err string) {
 func expandAliases(code string) string {
 	// Expand "p foo(), 2*3"   to println(foo(), 2*3)
 	r := regexp.MustCompile(`(?m)^\s*p +(.*)$`)
-	return string(r.ReplaceAll([]byte(code), []byte("println($1)")))
+	return string(r.ReplaceAll([]byte(code), []byte("__p($1)")))
 }
 
 // Each line of the original source is tagged with a line number at the end like so: //#100
@@ -346,18 +346,26 @@ func save(src string) (tmpfile string) {
 
 func buildMain(global string, nonGlobal string, pkgsToImport map[string]bool) string {
 	imports := ""
+	delete(pkgsToImport, "fmt") // Explicitly importing fmt in main
 	for k, _ := range pkgsToImport {
 		imports += `import "` + k + "\"\n"
 	}
 	template := `
 package main
+import "fmt"
 %s
+func __p(values ...interface{}){
+	for _, v := range values {
+             fmt.Printf(%s, v)
+	}
+}
 %s
 func main() {
      %s
 }
 `
-	return fmt.Sprintf(template, imports, global, nonGlobal)
+	valuefmt := `"%v\n"` // Embedding %v into template expands it prematurely!
+	return fmt.Sprintf(template, imports, valuefmt, global, nonGlobal)
 }
 
 // if line ends with '{' or '(', then consume until the corresponding '}' or ')'. Else return the next line.

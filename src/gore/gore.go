@@ -17,7 +17,8 @@ func main() {
 
 	out, err := eval.Eval(src)
 	if err == "" {
-		fmt.Println(out)
+		println("---------------------------------")
+		println(out)
 	} else {
 		fmt.Println("== Error ========")
 		fmt.Println(err)
