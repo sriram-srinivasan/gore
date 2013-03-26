@@ -222,6 +222,7 @@ func partition(code string) (global string, nonGlobal string) {
 	pos := 0 // Always maintained as the position from where to restart search
 	for {
 		chunk := nextChunk(code[pos:])
+		//fmt.Println("CHUNK<<<" + chunk + ">>>")
 		if len(chunk) == 0 {
 			break
 		}
@@ -369,7 +370,7 @@ func main() {
 }
 
 var openParenPattern = regexp.MustCompile(`(\{|\() *//#\d+$`)
-
+var nlPattern = regexp.MustCompile(` *//#\d+\n`)
 // if line ends with '{' or '(', then consume until the corresponding '}' or ')'. Else return the next line.
 func nextChunk(code string) (chunk string) {
 	// get earliest of '{', '(' or '\n'
@@ -416,18 +417,12 @@ func nextChunk(code string) (chunk string) {
 	if count != 0 {
 		panic(fmt.Sprintf("Mismatched parentheses or brackets:%s", code[:pos]))
 	}
-	// consume trailing whitespace
-	for i, ch = range code[pos:] {
-		if ch == ' ' && ch == '\t' {
-			pos++
-		} else {
-			if ch == '\n' {
-				pos++
-			}
-			break
-		}
-
+	// consume trailing spaces and newline, plus embedded line number pattern, if any
+	nlloc := nlPattern.FindStringIndex(code[pos:])
+	if nlloc != nil {
+		pos += nlloc[1]
 	}
+
 	return code[:pos]
 }
 
