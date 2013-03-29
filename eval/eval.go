@@ -1,8 +1,7 @@
 package eval
 
 /* 
- repl provides a single function, Eval, that "evaluates" its argument. See documentation for Eval for more details
-
+ eval provides a single function, Eval, that "evaluates" its argument. See documentation for Eval for more details
  author: Sriram Srinivasan (sriram@malhar.net)
 */
 
@@ -11,11 +10,8 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
 )
-
-type strmap map[string]string
 
 var builtinPkgs = map[string]string{
 	"adler32":   "hash/adler32",
@@ -164,12 +160,12 @@ var builtinPkgs = map[string]string{
 //     a =  {The answer is 42}
 //     The answer is: 42
 // 
-// 1. A line of the form "p XXX" is translated to println(XXX). 
+// 1. A line of the form "p XXX" is translated to _p(XXX), where _p is an embedded function (see buildMain)
 // 2. There is no need to import standard go packages. They are inferred
 //    and imported automatically. (e.g. "fmt" in the code above)
 // 3. The code is wrapped inside a main package and a main function. 
 //    Explicit import statements, type declarations and func declarations
-//    remain global (outside the main function)
+//    remain at the top-level (outside the main function)
 // 
 
 func Eval(code string) (out string, err string) {
@@ -187,9 +183,8 @@ func Eval(code string) (out string, err string) {
 
 	code = expandAliases(code)
 	pkgsToImport := inferPackages(code)
-	code = embedLineNumbers(code)
-	global, nonGlobal := partition(code)
-	return buildAndExec(global, nonGlobal, pkgsToImport)
+	topLevel, nonTopLevel := partition(code)
+	return buildAndExec(topLevel, nonTopLevel, pkgsToImport)
 }
 
 func expandAliases(code string) string {
@@ -198,49 +193,69 @@ func expandAliases(code string) string {
 	return string(r.ReplaceAll([]byte(code), []byte("__p($1)")))
 }
 
-// Each line of the original source is tagged with a line number at the end like so: //#100
-// Since the wrapping process adds import statements and rearranges global and non-global 
-// statements (see partition), this embedding permits us to map compiler error numbers back
-// to the original source
-func embedLineNumbers(code string) string {
-	lineNum := 0
-	if code[len(code)-1] != '\n' {
-		code += "\n"
-	}
-	r := regexp.MustCompile("\n")
-	return r.ReplaceAllStringFunc(code,
-		func(string) string {
-			lineNum++
-			return fmt.Sprintf("//#%d\n", lineNum)
-		})
-}
+// split code into topLevel and non-topLevel chunks. non-topLevel chunks belong inside
+// a main function, and topLevel chunks refer to type, func and import declarations
+// The return topLevel and nonTopLevel strings also contain embedded line numbers 
+// of the form "//line :xxx" that is understood by the go compiler to refer to the
+// correct line number in the original source.
+func partition(code string) (topLevel string, nonTopLevel string) {
+	isTopLevel := false
+	brackOpenAt := 0    // Line num of open bracket, if code ends with unclosed brackets
+	closingCh := " "[0] // One of ' ', '}', ')'.  ' ' means we are not looking for a closing bracketing ch at the beginning of line
+	// Note: Using " "[0] instead of ' ' to avoid mixing runes and bytes.
 
-// split code into global and non-global chunks. non-global chunks belong inside
-// a main function, and global chunks refer to type, func and import declarations
-func partition(code string) (global string, nonGlobal string) {
-	r := regexp.MustCompile("^ *(func|type|import)")
-	pos := 0 // Always maintained as the position from where to restart search
-	for {
-		chunk := nextChunk(code[pos:])
-		//fmt.Println("CHUNK<<<" + chunk + ">>>")
-		if len(chunk) == 0 {
-			break
+	// Simplistic strategy for paren/brack matching: We only look for open parens/brackets at end of line, and the corresponding
+	// closing parens/brackets at beginning of line. These are counted to account for nesting as well.
+	brackCount := 0
+	for i, line := range strings.Split(code, "\n") {
+		l := strings.TrimSpace(line)
+		if len(l) > 0 {
+			// check line beginning. Is it closing a paren
+			if l[0] == closingCh {
+				brackCount--
+				if brackCount == 0 {
+					closingCh = ' '
+					brackOpenAt = 0
+				}
+			} else if brackCount == 0 {
+				// look for func/type/import decls 
+				isTopLevel = strings.HasPrefix(l, "func ") || strings.HasPrefix(l, "type ") || strings.HasPrefix(l, "import ")
+			}
+			// Is there a dangling '{' or '(' at EOL?.
+			switch l[len(l)-1] {
+			case '{':
+				closingCh = "}"[0]
+				if brackCount == 0 {
+					brackOpenAt = i
+				}
+				brackCount++
+			case '(':
+				closingCh = ")"[0]
+				if brackCount == 0 {
+					brackOpenAt = i
+				}
+				brackCount++
+			}
+
+			line = fmt.Sprintf("//line :%d\n%s\n", i+1, line) // prepend line numbers for the go compiler
 		}
-		if r.FindString(chunk) == "" { // not import, type or func decl. 
-			nonGlobal += chunk
+		if isTopLevel {
+			topLevel += line
 		} else {
-			global += chunk
+			nonTopLevel += line
 		}
-		pos += len(chunk)
+	}
+	if brackCount > 0 {
+		panic(fmt.Sprintf("%d: Bracket or paren not closed. %d", brackOpenAt, brackCount))
 	}
 	return
 }
 
-var pkgPattern = regexp.MustCompile(`[a-z]\w+\.`)
+var pkgPat = regexp.MustCompile(`(?m)\b[a-z]\w+\.`)
 
-func inferPackages(chunk string) (pkgsToImport map[string]bool) {
+func inferPackages(code string) (pkgsToImport map[string]bool) {
 	pkgsToImport = make(map[string]bool) // used as a set
-	pkgs := pkgPattern.FindAllString(chunk, 100000)
+	pkgs := pkgPat.FindAllString(code, -1)
 	for _, pkg := range pkgs {
 		pkg = pkg[:len(pkg)-1] // remove trailing '.'
 		if importPkg, ok := builtinPkgs[pkg]; ok {
@@ -250,12 +265,12 @@ func inferPackages(chunk string) (pkgsToImport map[string]bool) {
 	return pkgsToImport
 }
 
-func buildAndExec(global string, nonGlobal string, pkgsToImport map[string]bool) (out string, err string) {
-	src := buildMain(global, nonGlobal, pkgsToImport)
+func buildAndExec(topLevel string, nonTopLevel string, pkgsToImport map[string]bool) (out string, err string) {
+	src := buildMain(topLevel, nonTopLevel, pkgsToImport)
 	out, err = run(src)
 	if err != "" {
 		if repairImports(err, pkgsToImport) {
-			src = buildMain(global, nonGlobal, pkgsToImport)
+			src = buildMain(topLevel, nonTopLevel, pkgsToImport)
 			out, err = run(src)
 		}
 	}
@@ -286,52 +301,23 @@ func repairImports(err string, pkgsToImport map[string]bool) (dupsDetected bool)
 }
 
 func run(src string) (output string, err string) {
-	src, newToOldLineNums := extractLineNumbers(src)
 	tmpfile := save(src)
 	cmd := exec.Command("go", "run", tmpfile)
 	out, e := cmd.CombinedOutput()
-
 	if e != nil {
-		err = string(out)
-		return "", remapCompileErrorLines(err, newToOldLineNums)
+		err = ""
+		errPat := regexp.MustCompile(`^:(\d+)\[.*\]:(.*)$`)
+		for _, e := range strings.Split(string(out), "\n") {
+			if strings.HasPrefix(e, "# command-line-arguments") {
+				continue
+			}
+			err += errPat.ReplaceAllString(e, ":$1:$2\n")
+		}
+		return "", err
 	} else {
 		return string(out), ""
 	}
 	return "", ""
-}
-
-func remapCompileErrorLines(err string, newToOldLineNums map[int]int) string {
-	ret := ""
-	r := regexp.MustCompile(`^.*?:(\d+):`)
-	for _, line := range strings.Split(err, "\n") {
-		if len(line) == 0 || strings.HasPrefix(line, "# command-line-arguments") {
-			continue
-		}
-		if m := r.FindStringSubmatchIndex(line); m != nil {
-			newLine, err := strconv.Atoi(line[m[2]:m[3]]) // The $1 slice
-			if err != nil {
-				panic("Internal error: Unable to convert " + line[m[2]:m[3]])
-			}
-			oldLine := newToOldLineNums[newLine]
-			ret += fmt.Sprintf("%d:%s\n", oldLine, line[(m[3]+1):])
-		} else {
-			ret += line + "\n"
-		}
-	}
-	return ret
-}
-
-func extractLineNumbers(src string) (srcNoLineNums string, newToOldLineNums map[int]int) {
-	newToOldLineNums = make(map[int]int)
-	r := regexp.MustCompile(`(?m)//#(\d+)$`)
-	for newLineNum, line := range strings.Split(src, "\n") {
-		if m := r.FindStringSubmatch(line); m != nil {
-			oldLineNum, _ := strconv.Atoi(m[1])
-			newToOldLineNums[newLineNum+1] = oldLineNum // compiler errors are 1-based
-		}
-	}
-	srcNoLineNums = r.ReplaceAllString(src, "") // remove line number annotations
-	return
 }
 
 func save(src string) (tmpfile string) {
@@ -345,9 +331,9 @@ func save(src string) (tmpfile string) {
 	return tmpfile
 }
 
-func buildMain(global string, nonGlobal string, pkgsToImport map[string]bool) string {
+func buildMain(topLevel string, nonTopLevel string, pkgsToImport map[string]bool) string {
 	imports := ""
-	delete(pkgsToImport, "fmt") // Explicitly importing fmt in main
+	delete(pkgsToImport, "fmt") // Explicitly importing fmt in the template below
 	for k, _ := range pkgsToImport {
 		imports += `import "` + k + "\"\n"
 	}
@@ -355,75 +341,19 @@ func buildMain(global string, nonGlobal string, pkgsToImport map[string]bool) st
 package main
 import "fmt"
 %s
+%s
+func main() {
+     %s
+}
+
 func __p(values ...interface{}){
 	for _, v := range values {
              fmt.Printf(%s, v)
 	}
 }
-%s
-func main() {
-     %s
-}
 `
-	valuefmt := `"%v\n"` // Embedding %v into template expands it prematurely!
-	return fmt.Sprintf(template, imports, valuefmt, global, nonGlobal)
-}
-
-var openParenPattern = regexp.MustCompile(`(\{|\() *//#\d+$`)
-var nlPattern = regexp.MustCompile(` *//#\d+\n`)
-// if line ends with '{' or '(', then consume until the corresponding '}' or ')'. Else return the next line.
-func nextChunk(code string) (chunk string) {
-	// get earliest of '{', '(' or '\n'
-	var ch, closech rune
-	var i int
-
-	i = strings.Index(code, "\n")
-	pos := i + 1
-	if i == 0 {
-		return code[:pos]
-	} // first char is newline
-	if i == -1 {
-		return code
-	} // EOS
-
-	// Does it end with '{' or '('?  Note, line numbers have been embedded, so we look for the form '{ //#234\n'
-	parenloc := openParenPattern.FindStringIndex(code[:i])
-	if parenloc == nil {
-		return code[:pos]
-	}
-	switch ch = rune(code[parenloc[0]]); ch {
-	case '{':
-		closech = '}'
-	case '(':
-		closech = ')'
-	default:
-		return code[:i]
-	}
-
-	// Search for closing ch, allowing for nesting. Note: '{' and '(' embedded within strings are incorrectly counted
-	startch := ch
-	count := 1
-	for i, ch = range code[pos:] {
-		if ch == startch {
-			count++
-		} else if ch == closech {
-			count--
-			if count == 0 {
-				break
-			}
-		}
-	}
-	pos += i + 1
-	if count != 0 {
-		panic(fmt.Sprintf("Mismatched parentheses or brackets:%s", code[:pos]))
-	}
-	// consume trailing spaces and newline, plus embedded line number pattern, if any
-	nlloc := nlPattern.FindStringIndex(code[pos:])
-	if nlloc != nil {
-		pos += nlloc[1]
-	}
-
-	return code[:pos]
+	valueFmt := `"%v\n"` // Embedding %v into template expands it prematurely!
+	return fmt.Sprintf(template, imports, topLevel, nonTopLevel, valueFmt)
 }
 
 func tempDir() string {
