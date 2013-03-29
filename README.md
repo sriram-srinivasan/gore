@@ -69,6 +69,7 @@ $ gore '
 
 ```
 go get github.com/sriram-srinivasan/gore
+go test github.com/sriram-srinivasan/gore/eval
 ```
 
 # The `gore/eval` package
