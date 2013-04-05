@@ -13,131 +13,49 @@ import (
 	"strings"
 )
 
-var builtinPkgs = map[string]string{
-	"adler32":   "hash/adler32",
-	"aes":       "crypto/aes",
-	"ascii85":   "encoding/ascii85",
-	"asn1":      "encoding/asn1",
-	"ast":       "go/ast",
-	"atomic":    "sync/atomic",
-	"base32":    "encoding/base32",
-	"base64":    "encoding/base64",
-	"big":       "math/big",
-	"binary":    "encoding/binary",
-	"bufio":     "bufio",
-	"build":     "go/build",
-	"bytes":     "bytes",
-	"bzip2":     "compress/bzip2",
-	"cgi":       "net/http/cgi",
-	"cgo":       "runtime/cgo",
-	"cipher":    "crypto/cipher",
-	"cmplx":     "math/cmplx",
-	"color":     "image/color",
-	"crc32":     "hash/crc32",
-	"crc64":     "hash/crc64",
-	"crypto":    "crypto",
-	"csv":       "encoding/csv",
-	"debug":     "runtime/debug",
-	"des":       "crypto/des",
-	"doc":       "go/doc",
-	"draw":      "image/draw",
-	"driver":    "database/sql/driver",
-	"dsa":       "crypto/dsa",
-	"dwarf":     "debug/dwarf",
-	"ecdsa":     "crypto/ecdsa",
-	"elf":       "debug/elf",
-	"elliptic":  "crypto/elliptic",
-	"errors":    "errors",
-	"exec":      "os/exec",
-	"expvar":    "expvar",
-	"fcgi":      "net/http/fcgi",
-	"filepath":  "path/filepath",
-	"flag":      "flag",
-	"flate":     "compress/flate",
-	"fmt":       "fmt",
-	"fnv":       "hash/fnv",
-	"gif":       "image/gif",
-	"gob":       "encoding/gob",
-	"gosym":     "debug/gosym",
-	"gzip":      "compress/gzip",
-	"hash":      "hash",
-	"heap":      "container/heap",
-	"hex":       "encoding/hex",
-	"hmac":      "crypto/hmac",
-	"html":      "html",
-	"http":      "net/http",
-	"httputil":  "net/http/httputil",
-	"image":     "image",
-	"io":        "io",
-	"ioutil":    "io/ioutil",
-	"jpeg":      "image/jpeg",
-	"json":      "encoding/json",
-	"jsonrpc":   "net/rpc/jsonrpc",
-	"list":      "container/list",
-	"log":       "log",
-	"lzw":       "compress/lzw",
-	"macho":     "debug/macho",
-	"mail":      "net/mail",
-	"math":      "math",
-	"md5":       "crypto/md5",
-	"mime":      "mime",
-	"multipart": "mime/multipart",
-	"net":       "net",
-	"os":        "os",
-	"parse":     "text/template/parse",
-	"parser":    "go/parser",
-	"path":      "path",
-	"pe":        "debug/pe",
-	"pem":       "encoding/pem",
-	"pkix":      "crypto/x509/pkix",
-	"png":       "image/png",
-	"pprof":     "net/http/pprof",
-	//"pprof": "runtime/pprof",
-	"printer": "go/printer",
-	//"rand": "crypto/rand",
-	"rand":    "math/rand",
-	"rc4":     "crypto/rc4",
-	"reflect": "reflect",
-	"regexp":  "regexp",
-	"ring":    "container/ring",
-	"rpc":     "net/rpc",
-	"rsa":     "crypto/rsa",
-	"runtime": "runtime",
-	//"scanner": "go/scanner",
-	"scanner":     "text/scanner",
-	"sha1":        "crypto/sha1",
-	"sha256":      "crypto/sha256",
-	"sha512":      "crypto/sha512",
-	"signal":      "os/signal",
-	"smtp":        "net/smtp",
-	"sort":        "sort",
-	"sql":         "database/sql",
-	"strconv":     "strconv",
-	"strings":     "strings",
-	"subtle":      "crypto/subtle",
-	"suffixarray": "index/suffixarray",
-	"sync":        "sync",
-	"syntax":      "regexp/syntax",
-	"syscall":     "syscall",
-	"syslog":      "log/syslog",
-	"tabwriter":   "text/tabwriter",
-	"tar":         "archive/tar",
-	//"template": "html/template",
-	//"template": "text/template",
-	"textproto": "net/textproto",
-	"time":      "time",
-	"tls":       "crypto/tls",
-	"token":     "go/token",
-	"unicode":   "unicode",
-	"unsafe":    "unsafe",
-	"url":       "net/url",
-	"user":      "os/user",
-	"utf16":     "unicode/utf16",
-	"utf8":      "unicode/utf8",
-	"x509":      "crypto/x509",
-	"xml":       "encoding/xml",
-	"zip":       "archive/zip",
-	"zlib":      "compress/zlib",
+var (
+	builtinPkgs map[string]string
+)
+
+func init() {
+	builtinPkgs = make(map[string]string)
+	pkgs := []string{
+		"hash/adler32", "crypto/aes", "encoding/ascii85", "encoding/asn1",
+		"go/ast", "sync/atomic", "encoding/base32", "encoding/base64",
+		"math/big", "encoding/binary", "bufio", "go/build",
+		"bytes", "compress/bzip2", "net/http/cgi", "runtime/cgo",
+		"crypto/cipher", "math/cmplx", "image/color", "hash/crc32",
+		"hash/crc64", "crypto", "encoding/csv", "runtime/debug",
+		"crypto/des", "go/doc", "image/draw", "database/sql/driver",
+		"crypto/dsa", "debug/dwarf", "crypto/ecdsa", "debug/elf",
+		"crypto/elliptic", "errors", "os/exec", "expvar",
+		"net/http/fcgi", "path/filepath", "flag", "compress/flate",
+		"fmt", "hash/fnv", "image/gif", "encoding/gob",
+		"debug/gosym", "compress/gzip", "hash", "container/heap",
+		"encoding/hex", "crypto/hmac", "html", "net/http",
+		"net/http/httputil", "image", "io", "io/ioutil",
+		"image/jpeg", "encoding/json", "net/rpc/jsonrpc", "container/list",
+		"log", "compress/lzw", "debug/macho", "net/mail",
+		"math", "crypto/md5", "mime", "mime/multipart",
+		"net", "os", "text/template/parse", "go/parser",
+		"path", "debug/pe", "encoding/pem", "crypto/x509/pkix",
+		"image/png", "net/http/pprof", "go/printer",
+		"math/rand", "crypto/rc4", "reflect",
+		"regexp", "container/ring", "net/rpc", "crypto/rsa",
+		"runtime", "text/scanner", "crypto/sha1",
+		"crypto/sha256", "crypto/sha512", "os/signal", "net/smtp",
+		"sort", "database/sql", "strconv", "strings",
+		"crypto/subtle", "index/suffixarray", "sync", "regexp/syntax",
+		"syscall", "log/syslog", "text/tabwriter", "archive/tar",
+		"text/template", "net/textproto", "time",
+		"crypto/tls", "go/token", "unicode", "unsafe",
+		"net/url", "os/user", "unicode/utf16", "unicode/utf8",
+		"crypto/x509", "encoding/xml", "archive/zip", "compress/zlib",
+	}
+
+	for _, pkg := range pkgs {
+		builtinPkgs[pkg[strings.LastIndex(pkg, "/")+1:]] = pkg
+	}
 }
 
 // Eval "evaluates" a multi-line bit of go code by compiling and running it. It
@@ -188,9 +106,13 @@ func Eval(code string) (out string, err string) {
 }
 
 func expandAliases(code string) string {
-	// Expand "p foo(), 2*3"   to println(foo(), 2*3)
+	// Expand "p foo(), 2*3"   to __p(foo(), 2*3)
 	r := regexp.MustCompile(`(?m)^\s*p +(.*)$`)
-	return string(r.ReplaceAll([]byte(code), []byte("__p($1)")))
+	code = string(r.ReplaceAll([]byte(code), []byte("__p($1)")))
+
+	// Expand "t foo(), 2*3"   to __t(foo(), 2*3)
+	r = regexp.MustCompile(`(?m)^\s*t +(.*)$`)
+	return string(r.ReplaceAll([]byte(code), []byte("__t($1)")))
 }
 
 // split code into topLevel and non-topLevel chunks. non-topLevel chunks belong inside
@@ -351,9 +273,15 @@ func __p(values ...interface{}){
              fmt.Printf(%s, v)
 	}
 }
+func __t(values ...interface{}){
+	for _, v := range values {
+             fmt.Printf(%s, v)
+	}
+}
 `
-	valueFmt := `"%v\n"` // Embedding %v into template expands it prematurely!
-	return fmt.Sprintf(template, imports, topLevel, nonTopLevel, valueFmt)
+	valueFmt := `"%+v\n"` // Embedding %v into template expands it prematurely!
+	typeFmt := `"%T\n"`
+	return fmt.Sprintf(template, imports, topLevel, nonTopLevel, valueFmt, typeFmt)
 }
 
 func tempDir() string {

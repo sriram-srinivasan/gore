@@ -34,9 +34,11 @@ func TestMultiline(t *testing.T) {
                        p "Case 2", foo, bar, pt
                   }
               }
+              // Check type
+              t Point{10,100}, 0.34343
               regexp.MustCompile("foobar")
         `
-	check(t, code, "Case 1\n10\n2\n{100 1000}", "")
+	check(t, code, "Case 1\n10\n2\n{x:100 y:1000}\nmain.Point\nfloat64", "")
 }
 
 func TestMultilineError(t *testing.T) {

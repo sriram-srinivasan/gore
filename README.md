@@ -33,8 +33,8 @@ $ gore 'p 200*300, math.Log10(100)'
 60000
 2
 ```
-`p` pretty-prints each argument by formatting it with `fmt.Printf("%v\n")`
-
+`p arg1, arg2` pretty-prints each argument by formatting it with `fmt.Printf("%v\n")`
+`t` arg1, arg2` prints the type of each argument
 #### Command-line arg can be over multiple lines
 ```
 $ gore '
@@ -50,8 +50,7 @@ Making a point
 {10 100}
 ```
 #### Import statements are inferred 
-Standard go packages are automatically imported, unless there is a clash of names (such as `rand`, which could either be `crypto/rand` or `math/rand`). Of course, you can add import statements of your own.
-
+Standard go packages are automatically imported. Where there is a clash of names, the more "likely" one is preferred: `math/rand` to `crypto/rand`, `net/http/pprof` to `runtime/pprof` and `text/template` to `html/template`. Of course, you can add import statements of your own (which overrides the default preferences as well)
 ```
 $ gore '
   r := regexp.MustCompile(`(\w+) says (\w+)`)
@@ -78,7 +77,7 @@ go test github.com/sriram-srinivasan/gore/eval
 
 ### How it works
 
-The `eval.Eval` function expands aliases (currently only the `p` command), and scans the snippet for references to packages from the standard Go library. All such references a corresponding `import` statement. The source is then partitioned into global and non-global code, where global refers to `type`, `import` and `func` declarations. The rest is bundled into a `func main() {}` wrapper. This reorganized code is compiled using `go run` and the output (stdout and stderr) collected. If there are compiler errors pointing to incorrectly inferred packages, the corresponding import statements are removed and the code is run once again.
+The `eval.Eval` function expands aliases, and scans the snippet for references to packages from the standard Go library. All such references a corresponding `import` statement. The source is then partitioned into global and non-global code, where global refers to `type`, `import` and `func` declarations. The rest is bundled into a `func main() {}` wrapper. This reorganized code is compiled using `go run` and the output (stdout and stderr) collected. If there are compiler errors pointing to incorrectly inferred packages, the corresponding import statements are removed and the code is run once again.
 
 #BUGS
-`gore` doesn't handle '{' and '(' inside quotes correctly.
+`gore` doesn't correctly handle trailing '{' and '(' inside backtick-quotes.
