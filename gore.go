@@ -13,16 +13,16 @@ func main() {
 	if len(os.Args) > 1 {
 		src = os.Args[1]
 	} else {
-		fmt.Println("Enter one or more lines and hit ctrl-D")
+		fmt.Println("Enter one or more lines and press Ctrl-D.")
 		src = readStdin()
 	}
 
 	out, err := eval.Eval(src)
 	if err == "" {
-		println("---------------------------------")
-		println(out)
+		//fmt.Fprintln(os.Stderr, "------------------------------")
+		fmt.Print(out)
 	} else {
-		fmt.Println("== Error ========")
+		fmt.Println("===== Error =====")
 		fmt.Println(err)
 	}
 }
