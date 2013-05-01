@@ -30,7 +30,7 @@ func TestMultiline(t *testing.T) {
                   p "Case 1", foo, bar, pt
               } else {
                                                   // Testing nested curlies
-                  if (pt.y > 1000)  {          
+                  if (pt.y > 1000) {
                        p "Case 2", foo, bar, pt
                   }
               }
