@@ -243,7 +243,7 @@ func run(src string) (output string, err string) {
 }
 
 func save(src string) (tmpfile string) {
-	tmpfile = tempDir() + string(os.PathSeparator) + "gore_eval.go"
+	tmpfile = os.TempDir() + string(os.PathSeparator) + "gore_eval.go"
 	fh, err := os.OpenFile(tmpfile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		panic("Unable to open file: '" + tmpfile + "': " + err.Error())
@@ -282,12 +282,4 @@ func __t(values ...interface{}){
 	valueFmt := `"%+v\n"` // Embedding %v into template expands it prematurely!
 	typeFmt := `"%T\n"`
 	return fmt.Sprintf(template, imports, topLevel, nonTopLevel, valueFmt, typeFmt)
-}
-
-func tempDir() string {
-	dir := os.Getenv("TMPDIR")
-	if dir == "" {
-		dir = "/tmp"
-	}
-	return dir
 }
