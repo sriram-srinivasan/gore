@@ -2,7 +2,7 @@ package eval_test
 
 import (
 	"fmt"
-	"github.com/sriram-srinivasan/gore/eval"
+	"github.com/shurcooL/gore/eval"
 	"strings"
 	"testing"
 )

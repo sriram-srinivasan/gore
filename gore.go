@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/sriram-srinivasan/gore/eval"
+	"github.com/shurcooL/gore/eval"
 	"io"
 	"os"
 )
