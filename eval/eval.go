@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -243,7 +244,7 @@ func run(src string) (output string, err string) {
 }
 
 func save(src string) (tmpfile string) {
-	tmpfile = os.TempDir() + string(os.PathSeparator) + "gore_eval.go"
+	tmpfile = filepath.Join(os.TempDir(), "gore_eval.go")
 	fh, err := os.OpenFile(tmpfile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		panic("Unable to open file: '" + tmpfile + "': " + err.Error())
