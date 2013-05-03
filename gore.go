@@ -13,7 +13,7 @@ func main() {
 	if len(os.Args) > 1 {
 		src = os.Args[1]
 	} else {
-		fmt.Println("Enter one or more lines and press Ctrl-D.")
+		//fmt.Fprintln(os.Stderr, "Enter one or more lines and press Ctrl-D.")
 		src = readStdin()
 	}
 
