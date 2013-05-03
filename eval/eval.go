@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"strings"
 )
@@ -188,6 +189,9 @@ func inferPackages(code string) (pkgsToImport map[string]bool) {
 }
 
 func buildAndExec(topLevel string, nonTopLevel string, pkgsToImport map[string]bool) (out string, err string) {
+	pkgsToImport["fmt"] = true // Explicitly imported in the template below in buildMain
+	// If "fmt" is explicitly imported by the user, the compiler will flag a duplicate import error, and
+	// repairImports takes care of the problem.
 	src := buildMain(topLevel, nonTopLevel, pkgsToImport)
 	out, err = run(src)
 	if err != "" {
@@ -243,7 +247,7 @@ func run(src string) (output string, err string) {
 }
 
 func save(src string) (tmpfile string) {
-	tmpfile = os.TempDir() + string(os.PathSeparator) + "gore_eval.go"
+	tmpfile = path.Join(os.TempDir(), "gore_eval.go")
 	fh, err := os.OpenFile(tmpfile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		panic("Unable to open file: '" + tmpfile + "': " + err.Error())
@@ -255,13 +259,11 @@ func save(src string) (tmpfile string) {
 
 func buildMain(topLevel string, nonTopLevel string, pkgsToImport map[string]bool) string {
 	imports := ""
-	delete(pkgsToImport, "fmt") // Explicitly importing fmt in the template below
 	for k, _ := range pkgsToImport {
 		imports += `import "` + k + "\"\n"
 	}
 	template := `
 package main
-import "fmt"
 %s
 %s
 func main() {
