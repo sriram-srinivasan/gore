@@ -30,7 +30,7 @@ func TestMultiline(t *testing.T) {
                   p "Case 1", foo, bar, pt
               } else {
                                                   // Testing nested curlies
-                  if (pt.y > 1000)  {          
+                  if (pt.y > 1000)  {
                        p "Case 2", foo, bar, pt
                   }
               }
@@ -39,6 +39,11 @@ func TestMultiline(t *testing.T) {
               regexp.MustCompile("foobar")
         `
 	check(t, code, "Case 1\n10\n2\n{x:100 y:1000}\nmain.Point\nfloat64", "")
+}
+
+func TestMultilineRawString(t *testing.T) {
+	code := "fmt.Println(`gore raw string\nmultiline test`)"
+	check(t, code, "gore raw string\nmultiline test", "")
 }
 
 func TestMultilineError(t *testing.T) {
@@ -67,9 +72,9 @@ var ts = strings.TrimSpace
 func check(t *testing.T, code string, expected_out string, expected_err string) {
 	out, err := eval.Eval(code)
 	if !(ts(expected_out) == ts(out)) {
-		t.Error(fmt.Sprintf("Expected output to be \n%s\nInstead got:\n%s\n", out, expected_out))
+		t.Error(fmt.Sprintf("Expected output to be:\n%s\n\nInstead got:\n%s\n", expected_out, out))
 	}
 	if !(ts(expected_err) == ts(err)) {
-		t.Error(fmt.Sprintf("Expected compiler error to be \n%s\n. Instead got:\n%s\n", err, expected_err))
+		t.Error(fmt.Sprintf("Expected compiler error to be:\n%s\n\nInstead got:\n%s\n", expected_err, err))
 	}
 }
