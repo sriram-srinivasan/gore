@@ -112,7 +112,7 @@ func Eval(code string) (out string, err string) {
 
 // Chunk kind
 const (
-	KSTRING = iota
+	KSTRING = iota + 1
 	KCOMMENT
 	KTEXT
 )
@@ -173,12 +173,13 @@ func partition(code string) (topLevel string, nonTopLevel string, pkgsToImport m
 		}
 		addChunk(state, chunk)
 	}
+
 	for lineNum := 1; lineNum <= state.lineNum; lineNum++ {
 		line := processLine(lineNum, state)
 		if state.isTopLevel {
-			topLevel += line
+			topLevel = addLine(lineNum, topLevel, line)
 		} else {
-			nonTopLevel += line
+			nonTopLevel = addLine(lineNum, nonTopLevel, line)
 		}
 	}
 
@@ -186,6 +187,16 @@ func partition(code string) (topLevel string, nonTopLevel string, pkgsToImport m
 		panic(fmt.Sprintf("%d: Bracket or paren not closed. %d", state.brackOpenAt, state.brackCount))
 	}
 	return topLevel, nonTopLevel, state.pkgsToImport
+}
+
+func addLine(lineNum int, code string, line string) string {
+	// add line numbers annotations only if they can be added at beginning of line; that is the earlier bit of code ends in \n
+	if len(code) == 0 || code[len(code)-1] == '\n' {
+		return code + fmt.Sprintf("//line :%d\n", lineNum) + line
+	} else {
+		return code + line
+	}
+	return ""
 }
 
 // add a chunk to the current line in state.chunks
@@ -271,16 +282,10 @@ func processLine(lineNum int, state *State) (retLine string) {
 		}
 	}
 
-	// Only the first text chunk (if any) gets a line number annotation. 
-	lineNumInserted := false
+	// Concat chunks' texts
 	retLine = ""
 	for _, chunk := range chunks {
-		txt := chunk.text
-		if chunk.kind == KTEXT && !lineNumInserted {
-			txt = fmt.Sprintf("\n//line :%d\n%s", lineNum, txt)
-			lineNumInserted = true
-		}
-		retLine += txt
+		retLine += chunk.text
 	}
 	return retLine
 }
@@ -414,7 +419,7 @@ package main
 %s
 %s
 func main() {
-     %s
+%s
 }
 
 func __p(values ...interface{}){
