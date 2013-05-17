@@ -134,7 +134,7 @@ func TestComments(t *testing.T) {
 	check(t, code, "/* test string {", "")
 }
 
-// check that line numbers of compiler errors are not thrown off by multiline comments 
+// check that line numbers of compiler errors are not thrown off by multiline comments
 func TestCommentsErr(t *testing.T) {
 	code := `
          a := /* {
@@ -149,10 +149,11 @@ var ts = strings.TrimSpace
 
 func check(t *testing.T, code string, expected_out string, expected_err string) {
 	out, err := eval.Eval(code)
-	if !(ts(expected_out) == ts(out)) {
+
+	if !(ts(expected_out) == ts(out)) && !strings.Contains(out, expected_out) {
 		t.Error(fmt.Sprintf("Expected output to be \n%s\nInstead got:\n%s\n", expected_out, out))
 	}
-	if !(ts(expected_err) == ts(err)) {
+	if !(ts(expected_err) == ts(err)) && !strings.Contains(err, expected_err) {
 		t.Error(fmt.Sprintf("Expected compiler error to be \n%s\n. Instead got:\n%s\n", expected_err, err))
 	}
 }
