@@ -80,3 +80,7 @@ go test github.com/sriram-srinivasan/gore/eval
 The `eval.Eval` function expands aliases, and scans the snippet for references to packages from the standard Go library. All such references a corresponding `import` statement. The source is then partitioned into global and non-global code, where global refers to `type`, `import` and `func` declarations. The rest is bundled into a `func main() {}` wrapper. This reorganized code is compiled using `go run` and the output (stdout and stderr) collected. If there are compiler errors pointing to incorrectly inferred packages, the corresponding import statements are removed and the code is run once again.
 
 To examine the generated code, set the environment variables TMPDIR or TEMPDIR, and look for $TMPDIR/gore_eval.go
+
+# License
+
+`gore` is available under a liberal MIT style license. See the _LICENSE_ file.
